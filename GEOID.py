@@ -1,4 +1,4 @@
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import messagebox
 import requests
 import pyperclip
@@ -42,30 +42,34 @@ def calculate():
         return
 
     geoid_height_feet = geoid_height_meters * METER_TO_FEET
+    rounded_meters = round(geoid_height_meters, 3)
     rounded_feet = round(geoid_height_feet, 3)
 
+    # Display unrounded results
     result_var.set(f"Geoid height at latitude {lat}, longitude {lon}:\n"
-                   f"In meters: {geoid_height_meters:.6f}\n"
-                   f"In feet: {geoid_height_feet:.6f}\n"
-                   f"Rounded to the nearest thousandth: {rounded_feet}")
+                   f"In meters (unrounded): {geoid_height_meters:.6f}\n"
+                   f"In feet (unrounded): {geoid_height_feet:.6f}")
 
-    # Update the clickable label with the rounded value
-    rounded_label.config(text=f"Click to copy: {rounded_feet} feet")
-    rounded_label.bind("<Button-1>", lambda e: copy_to_clipboard(rounded_feet))
+    # Update the clickable label for rounded values
+    rounded_label_feet.configure(text=f"Click to copy: {rounded_feet:.3f} feet")
+    rounded_label_feet.bind("<Button-1>", lambda e: copy_to_clipboard(f"{rounded_feet:.3f} feet"))
+
+    rounded_label_meters.configure(text=f"Click to copy: {rounded_meters:.3f} meters")
+    rounded_label_meters.bind("<Button-1>", lambda e: copy_to_clipboard(f"{rounded_meters:.3f} meters"))
 
 def copy_to_clipboard(value):
     """
     Copies the provided value to the system clipboard and shows a confirmation message.
     """
     pyperclip.copy(value)
-    show_auto_closing_message(f"{value} feet has been copied to the clipboard.")
+    show_auto_closing_message(f"{value} has been copied to the clipboard.")
 
-def show_auto_closing_message(message, duration=500):
+def show_auto_closing_message(message, duration=1500):
     """
     Displays a temporary message box that auto-closes after a specified duration (in milliseconds).
     """
     # Create a top-level window
-    temp_window = tk.Toplevel(root)
+    temp_window = ctk.CTkToplevel(root)
     temp_window.title("Copied")
     temp_window.geometry("300x100")
     temp_window.resizable(False, False)
@@ -80,7 +84,7 @@ def show_auto_closing_message(message, duration=500):
     temp_window.geometry(f"{window_width}x{window_height}+{position_right}+{position_top}")
 
     # Display the message
-    tk.Label(temp_window, text=message, padx=20, pady=20).pack()
+    ctk.CTkLabel(temp_window, text=message, padx=20, pady=20).pack()
 
     # Schedule the window to close after the specified duration
     temp_window.after(duration, temp_window.destroy)
@@ -89,32 +93,62 @@ def show_auto_closing_message(message, duration=500):
     temp_window.attributes("-topmost", True)
     temp_window.focus_force()
 
+def toggle_appearance_mode():
+    """
+    Toggles between light and dark appearance modes and adjusts text colors for visibility.
+    """
+    current_mode = ctk.get_appearance_mode()
+    new_mode = "Light" if current_mode == "Dark" else "Dark"
+    ctk.set_appearance_mode(new_mode)
+
+    # Update text colors based on the new mode
+    if new_mode == "Dark":
+        text_color = "#4CAF50"  # Green for dark mode
+    else:
+        text_color = "#0000FF"  # Blue for light mode
+
+    rounded_label_feet.configure(text_color=text_color)
+    rounded_label_meters.configure(text_color=text_color)
+
 # Set up the main application window
-root = tk.Tk()
+ctk.set_appearance_mode("System")  # Use system default appearance
+ctk.set_default_color_theme("blue")  # Set the color theme
+
+root = ctk.CTk()
 root.title("Geoid Height Calculator")
+root.iconbitmap(r'C:\Users\ablack\Desktop\Mine\Projects\Python\Resources\CDT.ico')
 
 # Latitude input
-tk.Label(root, text="Latitude (decimal degrees):").grid(row=0, column=0, padx=10, pady=5)
-lat_entry = tk.Entry(root)
+ctk.CTkLabel(root, text="Latitude (decimal degrees):").grid(row=0, column=0, padx=10, pady=5)
+lat_entry = ctk.CTkEntry(root)
 lat_entry.grid(row=0, column=1, padx=10, pady=5)
 
 # Longitude input
-tk.Label(root, text="Longitude (decimal degrees):").grid(row=1, column=0, padx=10, pady=5)
-lon_entry = tk.Entry(root)
+ctk.CTkLabel(root, text="Longitude (decimal degrees):").grid(row=1, column=0, padx=10, pady=5)
+lon_entry = ctk.CTkEntry(root)
 lon_entry.grid(row=1, column=1, padx=10, pady=5)
 
 # Calculate button
-calc_button = tk.Button(root, text="Calculate", command=calculate)
+calc_button = ctk.CTkButton(root, text="Calculate", command=calculate)
 calc_button.grid(row=2, column=0, columnspan=2, pady=10)
 
 # Result display
-result_var = tk.StringVar()
-result_label = tk.Label(root, textvariable=result_var, justify=tk.LEFT)
+result_var = ctk.StringVar()
+result_label = ctk.CTkLabel(root, textvariable=result_var, justify="left")
 result_label.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
-# Clickable label for rounded value
-rounded_label = tk.Label(root, text="", fg="blue", cursor="hand2")
-rounded_label.grid(row=4, column=0, columnspan=2, padx=10, pady=5)
+# Clickable label for rounded value in feet
+rounded_label_feet = ctk.CTkLabel(root, text="", text_color="#4CAF50" if ctk.get_appearance_mode() == "Dark" else "#0000FF", cursor="hand2")
+rounded_label_feet.grid(row=4, column=0, columnspan=2, padx=10, pady=5)
+
+# Clickable label for value in meters
+rounded_label_meters = ctk.CTkLabel(root, text="", text_color="#4CAF50" if ctk.get_appearance_mode() == "Dark" else "#0000FF", cursor="hand2")
+rounded_label_meters.grid(row=5, column=0, columnspan=2, padx=10, pady=5)
+
+# Appearance mode toggle switch
+appearance_mode_switch = ctk.CTkSwitch(root, text="Dark Mode", command=toggle_appearance_mode)
+appearance_mode_switch.grid(row=6, column=0, columnspan=2, pady=10)
+appearance_mode_switch.select()  # Default to dark mode
 
 # Start the GUI event loop
 root.mainloop()
