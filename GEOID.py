@@ -2,9 +2,16 @@ import customtkinter as ctk
 from tkinter import messagebox
 import requests
 import pyperclip
+import sys
+import os
 
 # Conversion factor from meters to feet
 METER_TO_FEET = 3.28083333
+
+def resource_path(relative_path):
+    """Get the absolute path to the resource, works for both .py and .exe."""
+    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    return os.path.join(base_path, relative_path)
 
 def get_geoid_height(lat, lon):
     """
@@ -68,28 +75,12 @@ def show_auto_closing_message(message, duration=1500):
     """
     Displays a temporary message box that auto-closes after a specified duration (in milliseconds).
     """
-    # Create a top-level window
     temp_window = ctk.CTkToplevel(root)
     temp_window.title("Copied")
     temp_window.geometry("300x100")
     temp_window.resizable(False, False)
-
-    # Center the window on the screen
-    window_width = 300
-    window_height = 100
-    screen_width = temp_window.winfo_screenwidth()
-    screen_height = temp_window.winfo_screenheight()
-    position_top = int(screen_height / 2 - window_height / 2)
-    position_right = int(screen_width / 2 - window_width / 2)
-    temp_window.geometry(f"{window_width}x{window_height}+{position_right}+{position_top}")
-
-    # Display the message
     ctk.CTkLabel(temp_window, text=message, padx=20, pady=20).pack()
-
-    # Schedule the window to close after the specified duration
     temp_window.after(duration, temp_window.destroy)
-
-    # Ensure the window is on top and focus is set
     temp_window.attributes("-topmost", True)
     temp_window.focus_force()
 
@@ -100,23 +91,18 @@ def toggle_appearance_mode():
     current_mode = ctk.get_appearance_mode()
     new_mode = "Light" if current_mode == "Dark" else "Dark"
     ctk.set_appearance_mode(new_mode)
-
-    # Update text colors based on the new mode
-    if new_mode == "Dark":
-        text_color = "#4CAF50"  # Green for dark mode
-    else:
-        text_color = "#0000FF"  # Blue for light mode
-
+    text_color = "#4CAF50" if new_mode == "Dark" else "#0000FF"
     rounded_label_feet.configure(text_color=text_color)
     rounded_label_meters.configure(text_color=text_color)
 
 # Set up the main application window
-ctk.set_appearance_mode("System")  # Use system default appearance
-ctk.set_default_color_theme("blue")  # Set the color theme
+ctk.set_appearance_mode("System")
+ctk.set_default_color_theme("blue")
 
 root = ctk.CTk()
 root.title("Geoid Height Calculator")
-root.iconbitmap(r'C:\Users\ablack\Desktop\Mine\Projects\Python\Resources\CDT.ico')
+icon_path = resource_path('Resources/CDT.ico')
+root.iconbitmap(icon_path)
 
 # Latitude input
 ctk.CTkLabel(root, text="Latitude (decimal degrees):").grid(row=0, column=0, padx=10, pady=5)
@@ -137,18 +123,16 @@ result_var = ctk.StringVar()
 result_label = ctk.CTkLabel(root, textvariable=result_var, justify="left")
 result_label.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
-# Clickable label for rounded value in feet
-rounded_label_feet = ctk.CTkLabel(root, text="", text_color="#4CAF50" if ctk.get_appearance_mode() == "Dark" else "#0000FF", cursor="hand2")
+# Clickable labels
+rounded_label_feet = ctk.CTkLabel(root, text="", text_color="#4CAF50", cursor="hand2")
 rounded_label_feet.grid(row=4, column=0, columnspan=2, padx=10, pady=5)
-
-# Clickable label for value in meters
-rounded_label_meters = ctk.CTkLabel(root, text="", text_color="#4CAF50" if ctk.get_appearance_mode() == "Dark" else "#0000FF", cursor="hand2")
+rounded_label_meters = ctk.CTkLabel(root, text="", text_color="#4CAF50", cursor="hand2")
 rounded_label_meters.grid(row=5, column=0, columnspan=2, padx=10, pady=5)
 
 # Appearance mode toggle switch
 appearance_mode_switch = ctk.CTkSwitch(root, text="Dark Mode", command=toggle_appearance_mode)
 appearance_mode_switch.grid(row=6, column=0, columnspan=2, pady=10)
-appearance_mode_switch.select()  # Default to dark mode
+appearance_mode_switch.select()
 
 # Start the GUI event loop
 root.mainloop()
