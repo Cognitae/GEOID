@@ -66,10 +66,25 @@ def calculate():
 
 def copy_to_clipboard(value):
     """
-    Copies the provided value to the system clipboard and shows a confirmation message.
+    Copies the provided value to the system clipboard using Tk's clipboard API
+    (more reliable in packaged apps). Falls back to pyperclip if needed.
     """
-    pyperclip.copy(value)
-    show_auto_closing_message(f"{value} has been copied to the clipboard.")
+    try:
+        # Prefer Tk's clipboard for reliability in packaged executables
+        root.clipboard_clear()
+        root.clipboard_append(value)
+        root.update()  # ensure the clipboard is updated/flushed to the OS
+        show_auto_closing_message(f"{value} has been copied to the clipboard.")
+    except Exception as tk_err:
+        # Fallback to pyperclip if Tk clipboard fails
+        try:
+            pyperclip.copy(value)
+            show_auto_closing_message(f"{value} has been copied to the clipboard.")
+        except Exception as pc_err:
+            messagebox.showerror(
+                "Copy Failed",
+                f"Could not copy to clipboard.\n\nTk error: {tk_err}\nPyperclip error: {pc_err}"
+            )
 
 def show_auto_closing_message(message, duration=1500):
     """
